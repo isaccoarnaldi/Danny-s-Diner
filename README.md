@@ -11,7 +11,7 @@ Please note that all the information regarding the case study has been sourced f
 ***
 
 ## Business Task
-Danny wants to use the data to answer a few simple questions about his customers, especially about their visiting patterns, how much money they’ve spent and also which menu items are their favourite. 
+Danny wants to use the data to answer a few simple questions about his customers, especially about their visiting patterns, how much money they’ve spent, and also which menu items are their favourite. 
 
 ***
 
@@ -323,7 +323,7 @@ GROUP BY s.customer_id;
 
 ***
 
-## BONUS QUESTIONS
+## BONUS QUESTION
 
 **Recreate the table with: customer_id, order_date, product_name, price, member (Y/N). Danny also requires further information about the ```ranking``` of customer products, but he purposely does not need the ranking for non-member purchases so he expects null ```ranking``` values for the records when customers are not yet part of the loyalty program.**
 
