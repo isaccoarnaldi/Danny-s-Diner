@@ -122,8 +122,8 @@ LIMIT 1;
 **5. Which item was the most popular for each customer?**
 - Create a Common Table Expression (CTE) named `order_info` by joining the `menu` and `sales` tables using the `product_id` column.
 - Group the results by `sales.customer_id` and `menu.product_name`, calculating the count of occurrences for each group using `COUNT(menu.product_id)`.
-- Use the DENSE_RANK() window function to determine the ranking of each `sales.customer_id` partition based on the order count, sorted in descending order.
-- In the outer query, apply WHERE filter to retrieve rank = 1, representing the highest order count for each customer.
+- Use the **DENSE_RANK** window function to determine the ranking of each `sales.customer_id` partition based on the order count, sorted in descending order.
+- In the outer query, apply **WHERE** filter to retrieve rank = 1, representing the highest order count for each customer.
   
 ````sql
 WITH order_info AS (
@@ -147,15 +147,13 @@ WHERE rank_num =1;
 
 #### Answer:
 | customer_id | product_name | order_count |
-| ----------- | ---------- |------------  |
-| A           | ramen        |  3   |
-| B           | sushi        |  2   |
-| B           | curry        |  2   |
-| B           | ramen        |  2   |
-| C           | ramen        |  3   |
+| ----------- | ------------ |------------ |
+| A           | ramen        |  3          |
+| B           | ramen        |  2          |
+| B           | curry        |  2          |
+| B           | sushi        |  2          |
+| C           | ramen        |  3          |
 
-- Customer A and C's favourite item is ramen.
-- Customer B enjoys all items on the menu. He/she is a true foodie, sounds like me.
 
 ***
 
@@ -163,43 +161,30 @@ WHERE rank_num =1;
 
 ```sql
 WITH joined_as_member AS (
-  SELECT
-    members.customer_id, 
-    sales.product_id,
-    ROW_NUMBER() OVER (
-      PARTITION BY members.customer_id
-      ORDER BY sales.order_date) AS row_num
-  FROM dannys_diner.members
-  INNER JOIN dannys_diner.sales
-    ON members.customer_id = sales.customer_id
-    AND sales.order_date > members.join_date
+ 		        SELECT m.*, 
+			       s.order_date,
+        		       s.product_id,
+			       ROW_NUMBER() OVER (PARTITION BY m.customer_id ORDER BY s.order_date) AS row_num
+		    	FROM dannys_diner.members m
+			JOIN dannys_diner.sales s
+			  ON m.customer_id = s.customer_id
+			 AND s.order_date > m.join_date
 )
 
-SELECT 
-  customer_id, 
-  product_name 
+SELECT customer_id, 
+       product_name 
 FROM joined_as_member
-INNER JOIN dannys_diner.menu
+JOIN dannys_diner.menu
   ON joined_as_member.product_id = menu.product_id
 WHERE row_num = 1
 ORDER BY customer_id ASC;
 ```
 
-#### Steps:
-- Create a CTE named `joined_as_member` and within the CTE, select the appropriate columns and calculate the row number using the **ROW_NUMBER()** window function. The **PARTITION BY** clause divides the data by `members.customer_id` and the **ORDER BY** clause orders the rows within each `members.customer_id` partition by `sales.order_date`.
-- Join tables `dannys_diner.members` and `dannys_diner.sales` on `customer_id` column. Additionally, apply a condition to only include sales that occurred *after* the member's `join_date` (`sales.order_date > members.join_date`).
-- In the outer query, join the `joined_as_member` CTE with the `dannys_diner.menu` on the `product_id` column.
-- In the **WHERE** clause, filter to retrieve only the rows where the row_num column equals 1, representing the first row within each `customer_id` partition.
-- Order result by `customer_id` in ascending order.
-
 #### Answer:
 | customer_id | product_name |
-| ----------- | ---------- |
+| ----------- | ------------ |
 | A           | ramen        |
 | B           | sushi        |
-
-- Customer A's first order as a member is ramen.
-- Customer B's first order as a member is sushi.
 
 ***
 
