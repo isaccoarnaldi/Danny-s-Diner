@@ -49,11 +49,10 @@ ORDER BY s.customer_id;
 ***
 
 **2. How many days has each customer visited the restaurant?**
--  **COUNT(DISTINCT `order_date`)** to count non-duplicate values
   
 ````sql
 SELECT s.customer_id, 
-  COUNT(DISTINCT s.order_date) AS visit_count
+       COUNT(DISTINCT s.order_date) AS visit_count
 FROM dannys_diner.sales AS s
 GROUP BY customer_id;
 ````
@@ -61,121 +60,90 @@ GROUP BY customer_id;
 #### Answer:
 | customer_id | visit_count |
 | ----------- | ----------- |
-| A           | 4          |
-| B           | 6          |
-| C           | 2          |
+| A           | 4           |
+| B           | 6           |
+| C           | 2           |
 
 ***
 
 **3. What was the first item from the menu purchased by each customer?**
+- Create a Common Table Expression (CTE) named `ranked` used to rank the orders based on `customer_id` and `order_date`. There is no timestamp, so based on the date customer A has both sushi and curry as the first order on that day. 
+- In the outer query, filtered results in the **WHERE** clause for rank = 1 which represent the first order(s) placed 
+- Use the GROUP BY clause to group the result by `customer_id`, `product_name`.
 
 ````sql
-WITH ordered_sales AS (
-  SELECT 
-    sales.customer_id, 
-    sales.order_date, 
-    menu.product_name,
-    DENSE_RANK() OVER (
-      PARTITION BY sales.customer_id 
-      ORDER BY sales.order_date) AS rank
-  FROM dannys_diner.sales
-  INNER JOIN dannys_diner.menu
-    ON sales.product_id = menu.product_id
+WITH ranked AS (
+            SELECT s.*,
+                   m.product_name,
+                   DENSE_RANK() OVER (PARTITION BY s.customer_id ORDER BY s.order_date) AS rank
+            FROM dannys_diner.sales AS s
+            JOIN dannys_diner.menu AS m
+              ON s.product_id = m.product_id
 )
 
-SELECT 
-  customer_id, 
-  product_name
-FROM ordered_sales
+SELECT customer_id, 
+       product_name AS first_product_ordered,
+       TO_CHAR(order_date, 'YYYY-MM-DD') AS date_ordered
+FROM ranked
 WHERE rank = 1
-GROUP BY customer_id, product_name;
+GROUP BY customer_id, first_product_ordered, date_ordered;
 ````
 
-#### Steps:
-- Create a Common Table Expression (CTE) named `ordered_sales_cte`. Within the CTE, create a new column `rank` and calculate the row number using **DENSE_RANK()** window function. The **PARTITION BY** clause divides the data by `customer_id`, and the **ORDER BY** clause orders the rows within each partition by `order_date`.
-- In the outer query, select the appropriate columns and apply a filter in the **WHERE** clause to retrieve only the rows where the rank column equals 1, which represents the first row within each `customer_id` partition.
-- Use the GROUP BY clause to group the result by `customer_id` and `product_name`.
-
 #### Answer:
-| customer_id | product_name | 
-| ----------- | ----------- |
-| A           | curry        | 
-| A           | sushi        | 
-| B           | curry        | 
-| C           | ramen        |
-
-- Customer A placed an order for both curry and sushi simultaneously, making them the first items in the order.
-- Customer B's first order is curry.
-- Customer C's first order is ramen.
-
-I have received feedback suggesting the use of `ROW_NUMBER()` instead of `DENSE_RANK()` for determining the "first order" in this question. 
-
-However, since the `order_date` does not have a timestamp, it is impossible to determine the exact sequence of items ordered by the customer. 
-
-Therefore, it would be inaccurate to conclude that curry is the customer's first order purely based on the alphabetical order of the product names. For this reason, I maintain my solution of using `DENSE_RANK()` and consider both curry and sushi as Customer A's first order.
+| customer_id | first_product_ordered | date_ordered |
+| ----------- | --------------------- | ------------ |
+| A           | curry                 | 2021-01-01   |
+| A           | sushi                 | 2021-01-01   |
+| B           | curry                 | 2021-01-01   |
+| C           | ramen                 | 2021-01-01   |
 
 ***
 
 **4. What is the most purchased item on the menu and how many times was it purchased by all customers?**
 
 ````sql
-SELECT 
-  menu.product_name,
-  COUNT(sales.product_id) AS most_purchased_item
-FROM dannys_diner.sales
-INNER JOIN dannys_diner.menu
-  ON sales.product_id = menu.product_id
-GROUP BY menu.product_name
-ORDER BY most_purchased_item DESC
+SELECT m.product_name,
+       COUNT(s.product_id) AS order_count
+FROM dannys_diner.sales AS s
+JOIN dannys_diner.menu AS m
+  ON s.product_id = m.product_id
+GROUP BY m.product_name
+ORDER BY order_count DESC
 LIMIT 1;
 ````
 
-#### Steps:
-- Perform a **COUNT** aggregation on the `product_id` column and **ORDER BY** the result in descending order using `most_purchased` field.
-- Apply the **LIMIT** 1 clause to filter and retrieve the highest number of purchased items.
-
 #### Answer:
-| most_purchased | product_name | 
-| ----------- | ----------- |
-| 8       | ramen |
-
-
-- Most purchased item on the menu is ramen which is 8 times. Yummy!
+| product_name | order_count | 
+| ------------ | ----------- |
+| ramen        | 8           |
 
 ***
 
 **5. Which item was the most popular for each customer?**
-
+- Create a Common Table Expression (CTE) named `order_info` by joining the `menu` and `sales` tables using the `product_id` column.
+- Group the results by `sales.customer_id` and `menu.product_name`, calculating the count of occurrences for each group using `COUNT(menu.product_id)`.
+- Use the DENSE_RANK() window function to determine the ranking of each `sales.customer_id` partition based on the order count, sorted in descending order.
+- In the outer query, apply WHERE filter to retrieve rank = 1, representing the highest order count for each customer.
+  
 ````sql
-WITH most_popular AS (
-  SELECT 
-    sales.customer_id, 
-    menu.product_name, 
-    COUNT(menu.product_id) AS order_count,
-    DENSE_RANK() OVER (
-      PARTITION BY sales.customer_id 
-      ORDER BY COUNT(sales.customer_id) DESC) AS rank
-  FROM dannys_diner.menu
-  INNER JOIN dannys_diner.sales
-    ON menu.product_id = sales.product_id
-  GROUP BY sales.customer_id, menu.product_name
+WITH order_info AS (
+  		SELECT product_name,
+                       customer_id,
+                       COUNT(product_name) AS order_count,
+		       DENSE_RANK() OVER (PARTITION BY customer_id ORDER BY COUNT(product_name) DESC) AS rank_num
+   		FROM dannys_diner.menu
+   		JOIN dannys_diner.sales 
+ 		  ON menu.product_id = sales.product_id
+ 		GROUP BY customer_id,
+            		 product_name
 )
-
-SELECT 
-  customer_id, 
-  product_name, 
-  order_count
-FROM most_popular 
-WHERE rank = 1;
+  
+SELECT customer_id,
+       product_name,
+       order_count
+FROM order_info
+WHERE rank_num =1;
 ````
-
-*Each user may have more than 1 favourite item.*
-
-#### Steps:
-- Create a CTE named `fav_item_cte` and within the CTE, join the `menu` table and `sales` table using the `product_id` column.
-- Group results by `sales.customer_id` and `menu.product_name` and calculate the count of `menu.product_id` occurrences for each group. 
-- Utilize the **DENSE_RANK()** window function to calculate the ranking of each `sales.customer_id` partition based on the count of orders **COUNT(`sales.customer_id`)** in descending order.
-- In the outer query, select the appropriate columns and apply a filter in the **WHERE** clause to retrieve only the rows where the rank column equals 1, representing the rows with the highest order count for each customer.
 
 #### Answer:
 | customer_id | product_name | order_count |
