@@ -47,8 +47,7 @@ ORDER BY s.customer_id;
 | B           | $ 74        |
 | C           | $ 36        |
 
-
-***
+#
 
 #### 2. How many days has each customer visited the restaurant?
   
@@ -66,7 +65,7 @@ GROUP BY customer_id;
 | B           | 6           |
 | C           | 2           |
 
-***
+#
 
 #### 3. What was the first item from the menu purchased by each customer?
 - Create a Common Table Expression (CTE) named `ranked` used to rank the orders based on `customer_id` and `order_date`. There is no timestamp, so based on the date customer A has both sushi and curry as the first order on that day. 
@@ -99,7 +98,7 @@ GROUP BY customer_id, first_product_ordered, date_ordered;
 | B           | curry                 | 2021-01-01   |
 | C           | ramen                 | 2021-01-01   |
 
-***
+#
 
 #### 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
 
@@ -119,7 +118,7 @@ LIMIT 1;
 | ------------ | ----------- |
 | ramen        | 8           |
 
-***
+#
 
 #### 5. Which item was the most popular for each customer?
 - Create a Common Table Expression (CTE) named `order_info` by joining the `menu` and `sales` tables using the `product_id` column.
@@ -156,8 +155,7 @@ WHERE rank_num =1;
 | B           | sushi        |  2          |
 | C           | ramen        |  3          |
 
-
-***
+#
 
 #### 6. Which item was purchased first by the customer after they became a member?
 - Common Table Expression (CTE) named `joined_as_memeber` performs ranking of what has been ordered first
@@ -190,7 +188,7 @@ ORDER BY customer_id;
 | A           | ramen        |
 | B           | sushi        |
 
-***
+#
 
 #### 7. Which item was purchased just before the customer became a member?
 
@@ -221,7 +219,7 @@ ORDER BY customer_id;
 | A           | sushi        |
 | B           | sushi        |
 
-***
+#
 
 #### 8. What is the total items and amount spent for each member before they became a member?
 - Count `sales.product_id` as total_items for each customer and the sum of `menu.price` as total_sales IN $.
@@ -249,7 +247,7 @@ ORDER BY customer_id;
 | A           | 2           | $ 25         |
 | B           | 3           | $ 40         |
 
-***
+#
 
 #### 9. If each $1 spent equates to 10 points and sushi has a 2x points multiplier — how many points would each customer have?
 
@@ -273,7 +271,7 @@ ORDER BY customer_id;
 | B           | 940          |
 | C           | 360          |
 
-***
+#
 
 #### 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi — how many points do customer A and B have at the end of January?
 
@@ -322,8 +320,7 @@ GROUP BY s.customer_id;
 | A           | 1020         |
 | B           | 320          |
 
-
-***
+#
 
 ## BONUS QUESTION
 
