@@ -25,7 +25,7 @@ Danny wants to use the data to answer a few simple questions about his customers
 
 ## Question and Solution
 
-**1. What is the total amount each customer spent at the restaurant?**
+#### 1. What is the total amount each customer spent at the restaurant?
 - Join `sales` and `menu` tables to get the `price` for each `product_id`d sold in `sales` 
 - Sum the total sales contributed by each customer. CONCAT() adds the $ sign
 - Group the aggregated results by `customer_id`.
@@ -50,7 +50,7 @@ ORDER BY s.customer_id;
 
 ***
 
-**2. How many days has each customer visited the restaurant?**
+#### 2. How many days has each customer visited the restaurant?
   
 ````sql
 SELECT s.customer_id, 
@@ -68,7 +68,7 @@ GROUP BY customer_id;
 
 ***
 
-**3. What was the first item from the menu purchased by each customer?**
+#### 3. What was the first item from the menu purchased by each customer?
 - Create a Common Table Expression (CTE) named `ranked` used to rank the orders based on `customer_id` and `order_date`. There is no timestamp, so based on the date customer A has both sushi and curry as the first order on that day. 
 - In the outer query, filtered results in the **WHERE** clause for rank = 1 which represent the first order(s) placed 
 - Use the GROUP BY clause to group the result by `customer_id`, `product_name`.
@@ -101,7 +101,7 @@ GROUP BY customer_id, first_product_ordered, date_ordered;
 
 ***
 
-**4. What is the most purchased item on the menu and how many times was it purchased by all customers?**
+#### 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
 
 ````sql
 SELECT m.product_name,
@@ -121,7 +121,7 @@ LIMIT 1;
 
 ***
 
-**5. Which item was the most popular for each customer?**
+#### 5. Which item was the most popular for each customer?
 - Create a Common Table Expression (CTE) named `order_info` by joining the `menu` and `sales` tables using the `product_id` column.
 - Group the results by `sales.customer_id` and `menu.product_name`, calculating the count of occurrences for each group using `COUNT(menu.product_id)`.
 - Use the **DENSE_RANK** window function to determine the ranking of each `sales.customer_id` partition based on the order count, sorted in descending order.
@@ -159,7 +159,7 @@ WHERE rank_num =1;
 
 ***
 
-**6. Which item was purchased first by the customer after they became a member?**
+#### 6. Which item was purchased first by the customer after they became a member?
 - Common Table Expression (CTE) named `joined_as_memeber` performs ranking of what has been ordered first
 - Outer query is used to select rank = 1 and get the name of dishes
   
@@ -192,7 +192,7 @@ ORDER BY customer_id;
 
 ***
 
-**7. Which item was purchased just before the customer became a member?**
+#### 7. Which item was purchased just before the customer became a member?
 
 ````sql
 WITH joined_as_member AS (
@@ -223,7 +223,7 @@ ORDER BY customer_id;
 
 ***
 
-**8. What is the total items and amount spent for each member before they became a member?**
+#### 8. What is the total items and amount spent for each member before they became a member?
 - Count `sales.product_id` as total_items for each customer and the sum of `menu.price` as total_sales IN $.
 - From `dannys_diner.sales` table, join `dannys_diner.members` table on `customer_id` column, ensuring that `sales.order_date` is earlier than `members.join_date` (`sales.order_date < members.join_date`).
 - Then, join `dannys_diner.menu` table to `dannys_diner.sales` table on `product_id` column.
@@ -251,7 +251,7 @@ ORDER BY customer_id;
 
 ***
 
-**9. If each $1 spent equates to 10 points and sushi has a 2x points multiplier — how many points would each customer have?**
+#### 9. If each $1 spent equates to 10 points and sushi has a 2x points multiplier — how many points would each customer have?
 
 ```sql
 SELECT s.customer_id,
@@ -275,7 +275,7 @@ ORDER BY customer_id;
 
 ***
 
-**10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi — how many points do customer A and B have at the end of January?**
+#### 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi — how many points do customer A and B have at the end of January?
 
 #### Assumptions:
 - During the initial period (Day -X to Day 1), members earn 10 points for every $1 spent, and for sushi, it's 20 points per $1.
@@ -327,7 +327,7 @@ GROUP BY s.customer_id;
 
 ## BONUS QUESTION
 
-**Recreate the table with: customer_id, order_date, product_name, price, member (Y/N). Danny also requires further information about the ```ranking``` of customer products, but he purposely does not need the ranking for non-member purchases so he expects null ```ranking``` values for the records when customers are not yet part of the loyalty program.**
+#### Recreate the table with: customer_id, order_date, product_name, price, member (Y/N). Danny also requires further information about the ```ranking``` of customer products, but he purposely does not need the ranking for non-member purchases so he expects null ```ranking``` values for the records when customers are not yet part of the loyalty program.
 
 ```sql
 WITH cte AS (
